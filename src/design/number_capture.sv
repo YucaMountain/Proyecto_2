@@ -5,7 +5,7 @@ module number_capture (
     input  logic [3:0] key_code,
     input  logic       key_valid,
 
-    input  logic       enable,      // NUEVO (controlado por FSM)
+    input  logic       enable,
 
     output logic [9:0] number,
     output logic       done
@@ -16,24 +16,32 @@ module number_capture (
 
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            temp_number <= 0;
-            digit_count <= 0;
-            done <= 0;
+            temp_number <= 10'd0;
+            number      <= 10'd0;
+            digit_count <= 2'd0;
+            done        <= 1'b0;
         end else begin
-            done <= 0;
+            done <= 1'b0;
 
-            if (enable && key_valid && key_code <= 9) begin
-                
+            // Si la FSM deshabilita captura, reinicia la captura actual
+            if (!enable) begin
+                temp_number <= 10'd0;
+                digit_count <= 2'd0;
+            end
+            // Solo acepta teclas numéricas 0-9
+            else if (key_valid && key_code <= 4'd9) begin
                 if (digit_count < 3) begin
                     temp_number <= (temp_number * 10) + key_code;
-                    digit_count <= digit_count + 1;
+                    digit_count <= digit_count + 1'b1;
 
+                    // Al llegar al tercer dígito, entrega número y done
                     if (digit_count == 2) begin
-                        number <= (temp_number * 10) + key_code;
-                        done <= 1;
+                        number      <= (temp_number * 10) + key_code;
+                        done        <= 1'b1;
+                        temp_number <= 10'd0;
+                        digit_count <= 2'd0;
                     end
                 end
-                // si ya hay 3 → ignora nuevas teclas
             end
         end
     end
