@@ -1,5 +1,5 @@
 //==============================================================================
-// DeBounce - VERSIÓN CORREGIDA Y PROBADA
+// DeBounce - VERSIÓN CORREGIDA Y MEJORADA
 //==============================================================================
 module DeBounce (
     input  wire clk,
@@ -7,36 +7,48 @@ module DeBounce (
     input  wire button_in,
     output reg  DB_out
 );
-    
-    // Parámetros (ajustados para simulación rápida)
-    localparam DEBOUNCE_CYCLES = 100;  // 100 ciclos para simulación
-    // Para hardware real usar: 250000 (10ms @ 50MHz)
-    
-    reg [16:0] counter;
-    reg button_stable;
-    reg prev_state;
-    
+
+    // Parámetro de debounce
+    localparam integer DEBOUNCE_CYCLES = 100;
+
+    // Cálculo automático del ancho del contador
+    localparam integer COUNTER_WIDTH = $clog2(DEBOUNCE_CYCLES + 1);
+
+    reg [COUNTER_WIDTH-1:0] counter;
+
+    // Sincronización de entrada asíncrona
+    reg sync_0, sync_1;
+
+    // Estado estable previo
+    reg stable_state;
+
     always @(posedge clk or negedge n_reset) begin
         if (!n_reset) begin
-            counter <= 0;
-            DB_out <= 0;
-            prev_state <= 0;
+            sync_0       <= 1'b0;
+            sync_1       <= 1'b0;
+            counter      <= {COUNTER_WIDTH{1'b0}};
+            stable_state <= 1'b0;
+            DB_out       <= 1'b0;
         end else begin
-            prev_state <= button_in;
-            
-            // Si cambió la entrada, reiniciar contador
-            if (button_in != prev_state) begin
-                counter <= 0;
-            end
-            // Si es estable y no ha cambiado
-            else if (counter < DEBOUNCE_CYCLES) begin
-                counter <= counter + 1;
-            end
-            // Si pasó el tiempo de debounce, actualizar salida
-            else begin
-                DB_out <= button_in;
+            // Sincronizador de 2 etapas
+            sync_0 <= button_in;
+            sync_1 <= sync_0;
+
+            // Si la entrada sincronizada cambió respecto al estado estable,
+            // empieza o continúa el conteo
+            if (sync_1 != stable_state) begin
+                if (counter < DEBOUNCE_CYCLES) begin
+                    counter <= counter + 1'b1;
+                end else begin
+                    stable_state <= sync_1;
+                    DB_out       <= sync_1;
+                    counter      <= {COUNTER_WIDTH{1'b0}};
+                end
+            end else begin
+                // Si no hay cambio, reinicia contador
+                counter <= {COUNTER_WIDTH{1'b0}};
             end
         end
     end
-    
+
 endmodule
