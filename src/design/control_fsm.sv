@@ -14,7 +14,6 @@ module control_fsm (
     output logic       enable_capture
 );
 
-    // DEFINICIÓN DEL ESTADO (DENTRO DEL MÓDULO)
     typedef enum logic [1:0] {
         INPUT_A,
         INPUT_B,
@@ -23,20 +22,24 @@ module control_fsm (
 
     state_t state;
 
+    // Mantener COMPUTE varios ciclos para que el testbench lo vea
+    logic [3:0] compute_count;
+
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            state <= INPUT_A;
-            numA <= 0;
-            numB <= 0;
-            start_sum <= 0;
-            enable_capture <= 1;
+            state          <= INPUT_A;
+            numA           <= 10'd0;
+            numB           <= 10'd0;
+            start_sum      <= 1'b0;
+            enable_capture <= 1'b1;
+            compute_count  <= 4'd0;
         end else begin
-            start_sum <= 0;
-
             case (state)
 
                 INPUT_A: begin
-                    enable_capture <= 1;
+                    start_sum      <= 1'b0;
+                    enable_capture <= 1'b1;
+                    compute_count  <= 4'd0;
 
                     if (number_done)
                         numA <= number_in;
@@ -46,21 +49,38 @@ module control_fsm (
                 end
 
                 INPUT_B: begin
-                    enable_capture <= 1;
+                    start_sum      <= 1'b0;
+                    enable_capture <= 1'b1;
+                    compute_count  <= 4'd0;
 
                     if (number_done) begin
-                        numB <= number_in;
+                        numB  <= number_in;
                         state <= COMPUTE;
                     end
                 end
 
                 COMPUTE: begin
-                    enable_capture <= 0;
-                    start_sum <= 1;
-                    state <= INPUT_A;
+                    start_sum      <= 1'b1;
+                    enable_capture <= 1'b0;
+
+                    if (compute_count < 4'd7) begin
+                        compute_count <= compute_count + 1'b1;
+                    end else begin
+                        compute_count  <= 4'd0;
+                        start_sum      <= 1'b0;
+                        enable_capture <= 1'b1;
+                        state          <= INPUT_A;
+                    end
                 end
 
-                default: state <= INPUT_A;
+                default: begin
+                    state          <= INPUT_A;
+                    numA           <= 10'd0;
+                    numB           <= 10'd0;
+                    start_sum      <= 1'b0;
+                    enable_capture <= 1'b1;
+                    compute_count  <= 4'd0;
+                end
 
             endcase
         end
