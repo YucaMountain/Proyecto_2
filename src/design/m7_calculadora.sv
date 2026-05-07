@@ -1,52 +1,49 @@
-module m7_calculadora (
-    input  logic        clk,
-    input  logic        rst_n,
-    input  logic [3:0]  key_code,
-    input  logic        key_valid,
-    input  logic [15:0] current_display,
+module m7_prueba (
+    input         clk,
+    input         rst_n,
+    input  [3:0]  key_code,
+    input         key_valid,
+    input  [15:0] current_display,
 
-    output logic        m4_clear,
-    output logic        m4_load,
-    output logic [15:0] m4_result_data
+    output reg        m4_clear,
+    output reg        m4_load,
+    output reg [15:0] m4_result_data
 );
 
-    logic key_valid_prev;
-    logic key_press;
+    reg key_valid_prev;
+    wire key_press;
 
-    logic [9:0]  reg_A, reg_B;
-    logic [2:0]  state;
+    reg [9:0]  reg_A, reg_B;
+    reg [2:0]  state;
 
-    logic [10:0] suma_wire;
-    logic [10:0] suma_reg;
-    logic [10:0] temp_val;
+    wire [10:0] suma_wire;
+    reg  [10:0] suma_reg;
+    reg  [10:0] temp_val;
 
-    logic [3:0]  b3, b2, b1, b0;
-    logic [9:0]  val_en_pantalla;
+    reg [3:0]  b3, b2, b1, b0;
+    wire [9:0] val_en_pantalla;
 
-    // Detector de flanco
-    always_ff @(posedge clk or negedge rst_n) begin
+    always @(posedge clk or negedge rst_n) begin
         if (!rst_n)
             key_valid_prev <= 1'b0;
         else
             key_valid_prev <= key_valid;
     end
 
-    assign key_press = key_valid && !key_valid_prev;
+    assign key_press = key_valid & ~key_valid_prev;
 
-    // Reconstrucción del valor en pantalla (3 dígitos)
     assign val_en_pantalla =
         ((current_display[7:4]   < 10) ? {6'd0, current_display[7:4]}   : 10'd0) * 10'd100 +
         ((current_display[11:8]  < 10) ? {6'd0, current_display[11:8]}  : 10'd0) * 10'd10  +
         ((current_display[15:12] < 10) ? {6'd0, current_display[15:12]} : 10'd0);
 
-    // Sumador externo
     m8_sumador u_sumador (
         .A   (reg_A),
         .B   (reg_B),
         .SUM (suma_wire)
     );
 
-    always_ff @(posedge clk or negedge rst_n) begin
+    always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             reg_A          <= 10'd0;
             reg_B          <= 10'd0;
@@ -93,10 +90,10 @@ module m7_calculadora (
 
                 3'd2: begin
                     if (suma_reg >= 11'd1000) begin
-                        b3      <= 4'd1;
+                        b3       <= 4'd1;
                         temp_val <= suma_reg - 11'd1000;
                     end else begin
-                        b3      <= 4'd0;
+                        b3       <= 4'd0;
                         temp_val <= suma_reg;
                     end
                     state <= 3'd3;
