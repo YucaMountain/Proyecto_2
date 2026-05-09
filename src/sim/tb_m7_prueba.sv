@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module tb_m7_prueba;
+module m7_calculadora_tb;
 
     reg         clk;
     reg         rst_n;
@@ -40,10 +40,10 @@ module tb_m7_prueba;
     endtask
 
     initial begin
-        $dumpfile("tb_m7_prueba.vcd");
-        $dumpvars(0, tb_m7_prueba);
+        $dumpfile("m7_calculadora_tb.vcd");
+        $dumpvars(0, m7_calculadora_tb);
 
-        $display("=== Iniciando tb_m7_prueba ===");
+        $display("=== Iniciando m7_calculadora_tb ===");
 
         rst_n = 0;
         key_code = 0;
@@ -91,7 +91,7 @@ module tb_m7_prueba;
         if (m4_result_data !== 16'h8991)
             $display("ERROR: esperado 8991, obtenido %h", m4_result_data);
 
-        $display("=== Fin tb_m7_prueba ===");
+        $display("=== Fin m7_calculadora_tb ===");
         $finish;
     end
 
