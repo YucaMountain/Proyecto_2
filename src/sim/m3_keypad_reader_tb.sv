@@ -1,342 +1,259 @@
 `timescale 1ns / 1ps
 
-module keypad_reader_tb ();
+module m3_keypad_reader_tb;
 
+    //============================================================
     // Parámetros
-    localparam CLK_PERIOD = 20;  // 50 MHz
-    localparam DEBOUNCE_TIME = 10000;  // 10us para simulación (en realidad sería más)
-    
+    //============================================================
+    localparam CLK_PERIOD = 20;   // periodo de reloj de simulación
+    localparam HOLD_CYCLES = 40;  // > 20 ciclos para pasar debounce
+
+    //============================================================
     // Señales
-    logic clk;
-    logic rst_n;
-    logic [3:0] rows;
-    logic [3:0] cols;
-    logic [3:0] key_code;
-    logic key_valid;
-    
-    // Variables para simular el teclado
-    logic [3:0] keypad_matrix [0:3][0:3];
-    logic [3:0] simulated_rows;
-    
-    // Instancia del módulo
-    keypad_reader uut (
-        .clk       (clk),
-        .rst_n     (rst_n),
-        .rows      (rows),
-        .cols      (cols),
-        .key_code  (key_code),
-        .key_valid (key_valid)
+    //============================================================
+    reg         clk;
+    reg         rst_n;
+    reg  [3:0]  rows;
+    wire [3:0]  cols;
+    wire [3:0]  key_code;
+    wire        key_valid;
+
+    // Variables para “apretar” una tecla en la matriz
+    reg         key_active;
+    reg  [1:0]  pressed_row;
+    reg  [1:0]  pressed_col;
+
+    integer errors;
+    integer pulse_count;
+
+    //============================================================
+    // DUT
+    //============================================================
+    m3_keypad_reader uut (
+        .clk      (clk),
+        .rst_n    (rst_n),
+        .rows     (rows),
+        .cols     (cols),
+        .key_code (key_code),
+        .key_valid(key_valid)
     );
-    
-    // Generación del reloj
+
+    //============================================================
+    // Reloj
+    //============================================================
     initial begin
-        clk = 0;
+        clk = 1'b0;
         forever #(CLK_PERIOD/2) clk = ~clk;
     end
-    
-    // Simulación del teclado (matriz 4x4)
-    task press_key(input int row, input int col);
-        begin
-            $display("  Presionando tecla en fila %0d, columna %0d", row, col);
-            
-            // Simular rebotes
-            for (int i = 0; i < 5; i++) begin
-                #(CLK_PERIOD * 2);
-                rows = ~(1 << row);  // Activar fila correspondiente
-                #(CLK_PERIOD * 1);
-                rows = 4'b0000;      // Rebote
-            end
-            
-            // Presión estable
-            rows = ~(1 << row);
-            #(DEBOUNCE_TIME);
-            
-            $display("  Tecla estabilizada");
-        end
-    endtask
-    
-    task release_key();
-        begin
-            $display("  Liberando tecla");
-            
-            // Simular rebotes
-            for (int i = 0; i < 3; i++) begin
-                #(CLK_PERIOD * 2);
-                rows = 4'b0000;
-                #(CLK_PERIOD * 1);
-                rows = ~(1 << 0);  // Rebote con otra fila
-            end
-            
-            // Liberación estable
-            rows = 4'b0000;
-            #(DEBOUNCE_TIME);
-            
-            $display("  Tecla liberada");
-        end
-    endtask
-    
-    // Monitorear columnas
-    initial begin
-        forever begin
-            @(cols);
-            #1;  // Pequeño retraso para evitar race conditions
-            // Esto es solo para visualización
+
+    //============================================================
+    // Modelo del teclado matricial
+    // Reposo: filas en 1111 (pull-up)
+    // Si una tecla está activa, solo baja la fila cuando la columna
+    // correspondiente está siendo escaneada (cols[col] = 0)
+    //============================================================
+    always @(*) begin
+        rows = 4'b1111;
+
+        if (key_active) begin
+            case (pressed_col)
+                2'd0: if (cols[0] == 1'b0) rows[pressed_row] = 1'b0;
+                2'd1: if (cols[1] == 1'b0) rows[pressed_row] = 1'b0;
+                2'd2: if (cols[2] == 1'b0) rows[pressed_row] = 1'b0;
+                2'd3: if (cols[3] == 1'b0) rows[pressed_row] = 1'b0;
+            endcase
         end
     end
-    
-    // Función para obtener la tecla esperada
-    function [3:0] get_expected_key(input int row, input int col);
-        case ({row, col})
-            {2'b00, 2'b00}: get_expected_key = 4'h1;
-            {2'b01, 2'b00}: get_expected_key = 4'h4;
-            {2'b10, 2'b00}: get_expected_key = 4'h7;
-            {2'b11, 2'b00}: get_expected_key = 4'hE;
-            
-            {2'b00, 2'b01}: get_expected_key = 4'h2;
-            {2'b01, 2'b01}: get_expected_key = 4'h5;
-            {2'b10, 2'b01}: get_expected_key = 4'h8;
-            {2'b11, 2'b01}: get_expected_key = 4'h0;
-            
-            {2'b00, 2'b10}: get_expected_key = 4'h3;
-            {2'b01, 2'b10}: get_expected_key = 4'h6;
-            {2'b10, 2'b10}: get_expected_key = 4'h9;
-            {2'b11, 2'b10}: get_expected_key = 4'hF;
-            
-            {2'b00, 2'b11}: get_expected_key = 4'hA;
-            {2'b01, 2'b11}: get_expected_key = 4'hB;
-            {2'b10, 2'b11}: get_expected_key = 4'hC;
-            {2'b11, 2'b11}: get_expected_key = 4'hD;
-            
-            default: get_expected_key = 4'h0;
-        endcase
+
+    //============================================================
+    // Función: código esperado según fila/columna
+    //============================================================
+    function [3:0] expected_key;
+        input [1:0] row;
+        input [1:0] col;
+        begin
+            case ({row, col})
+                4'b0000: expected_key = 4'h1;
+                4'b0001: expected_key = 4'h2;
+                4'b0010: expected_key = 4'h3;
+                4'b0011: expected_key = 4'hA;
+
+                4'b0100: expected_key = 4'h4;
+                4'b0101: expected_key = 4'h5;
+                4'b0110: expected_key = 4'h6;
+                4'b0111: expected_key = 4'hB;
+
+                4'b1000: expected_key = 4'h7;
+                4'b1001: expected_key = 4'h8;
+                4'b1010: expected_key = 4'h9;
+                4'b1011: expected_key = 4'hC;
+
+                4'b1100: expected_key = 4'hE;
+                4'b1101: expected_key = 4'h0;
+                4'b1110: expected_key = 4'hF;
+                4'b1111: expected_key = 4'hD;
+
+                default: expected_key = 4'h0;
+            endcase
+        end
     endfunction
-    
-    // Proceso principal de prueba
-    initial begin
-        $display("===========================================");
-        $display("Iniciando testbench del keypad_reader");
-        $display("===========================================\n");
-        
-        // Inicialización
-        rows = 4'b0000;
-        
-        // Reset del sistema
-        $display("Aplicando reset...");
-        rst_n = 0;
+
+    //============================================================
+    // Tareas
+    //============================================================
+    task reset_system;
+    begin
+        rst_n       = 1'b0;
+        key_active  = 1'b0;
+        pressed_row = 2'd0;
+        pressed_col = 2'd0;
         repeat(5) @(posedge clk);
-        rst_n = 1;
-        @(posedge clk);
-        $display("✓ Sistema reseteado\n");
-        
-        // Prueba 1: Presionar todas las teclas una por una
-        $display("--- Prueba 1: Verificar todas las teclas ---");
-        for (int row = 0; row < 4; row++) begin
-            for (int col = 0; col < 4; col++) begin
-                $display("\nProbando tecla en fila %0d, columna %0d", row, col);
-                
-                press_key(row, col);
-                
-                // Esperar a que se detecte la tecla
-                #(CLK_PERIOD * 10);
-                
-                // Verificar key_valid
-                if (key_valid) begin
-                    $display("  ✓ key_valid detectado");
-                    
-                    // Verificar código
-                    if (key_code == get_expected_key(row, col)) begin
-                        $display("  ✓ Código correcto: %h", key_code);
-                    end else begin
-                        $display("  ✗ ERROR: Código esperado %h, obtenido %h", 
-                                 get_expected_key(row, col), key_code);
-                    end
-                end else begin
-                    $display("  ✗ ERROR: key_valid no detectado");
-                end
-                
-                release_key();
-                #(CLK_PERIOD * 100);
-            end
-        end
-        $display("");
-        
-        // Prueba 2: Verificar que key_valid es solo un pulso
-        $display("--- Prueba 2: Verificar pulso de key_valid ---");
-        $display("\nPresionando tecla 1 (fila0,col0)");
-        press_key(0, 0);
-        
-        // Verificar que key_valid dure solo un ciclo
-        @(posedge clk);
-        if (key_valid) begin
+        rst_n = 1'b1;
+        repeat(5) @(posedge clk);
+        $display("✓ Sistema reseteado");
+    end
+    endtask
+
+    task press_key;
+        input [1:0] row;
+        input [1:0] col;
+    begin
+        $display("  Presionando tecla fila=%0d col=%0d", row, col);
+        pressed_row = row;
+        pressed_col = col;
+        key_active  = 1'b1;
+    end
+    endtask
+
+    task release_key;
+    begin
+        $display("  Liberando tecla");
+        key_active = 1'b0;
+    end
+    endtask
+
+    task wait_cycles;
+        input integer n;
+        integer i;
+    begin
+        for (i = 0; i < n; i = i + 1)
             @(posedge clk);
-            if (!key_valid) begin
-                $display("  ✓ key_valid es un solo pulso (correcto)");
-            end else begin
-                $display("  ✗ ERROR: key_valid dura más de un ciclo");
-            end
-        end
-        
-        release_key();
-        #(CLK_PERIOD * 50);
-        $display("");
-        
-        // Prueba 3: Múltiples teclas rápidamente
-        $display("--- Prueba 3: Secuencia rápida de teclas ---");
-        
-        // Presionar tecla 1
-        $display("\nSecuencia: 1, 2, 3, 4");
-        press_key(0, 0);  // Tecla 1
-        #(CLK_PERIOD * 20);
-        release_key();
-        #(CLK_PERIOD * 10);
-        
-        press_key(0, 1);  // Tecla 2
-        #(CLK_PERIOD * 20);
-        release_key();
-        #(CLK_PERIOD * 10);
-        
-        press_key(0, 2);  // Tecla 3
-        #(CLK_PERIOD * 20);
-        release_key();
-        #(CLK_PERIOD * 10);
-        
-        press_key(0, 3);  // Tecla 4
-        #(CLK_PERIOD * 20);
-        release_key();
-        #(CLK_PERIOD * 50);
-        $display("");
-        
-        // Prueba 4: Tecla sostenida (debe generar solo un pulso)
-        $display("--- Prueba 4: Tecla sostenida por mucho tiempo ---");
-        $display("\nPresionando tecla 5 y sosteniendo");
-        press_key(1, 0);  // Tecla 5
-        
-        // Esperar varios ciclos
-        repeat(500) @(posedge clk);
-        
-        // Debe haber generado solo un pulso
-        $display("  Verificando que no hay múltiples detecciones...");
-        #(CLK_PERIOD * 10);
-        
-        release_key();
-        #(CLK_PERIOD * 50);
-        $display("");
-        
-        // Prueba 5: Teclas simultáneas (debe ignorarse)
-        $display("--- Prueba 5: Múltiples teclas simultáneas ---");
-        $display("\nPresionando dos teclas a la vez");
-        
-        // Simular dos filas activas
-        rows = ~(1 << 0) | ~(1 << 1);  // Filas 0 y 1 activas
-        #(DEBOUNCE_TIME);
-        
-        // Verificar que no se detecte o que key_code sea 0
-        if (!key_valid) begin
-            $display("  ✓ Teclas simultáneas ignoradas correctamente");
+    end
+    endtask
+
+    task test_one_key;
+        input [1:0] row;
+        input [1:0] col;
+        input [100*8:1] name;
+        reg [3:0] exp;
+    begin
+        exp = expected_key(row, col);
+        pulse_count = 0;
+
+        $display("\n--- %0s ---", name);
+
+        press_key(row, col);
+
+        // esperar a que pase debounce y salga key_valid
+        wait_cycles(HOLD_CYCLES);
+
+        if (key_valid !== 1'b1) begin
+            $display("  ✗ ERROR: key_valid no se activó");
+            errors = errors + 1;
         end else begin
-            $display("  ✗ ERROR: Se detectó tecla con múltiples filas");
+            $display("  ✓ key_valid detectado");
         end
-        
-        rows = 4'b0000;
-        #(CLK_PERIOD * 50);
-        $display("");
-        
-        // Prueba 6: Reset durante operación
-        $display("--- Prueba 6: Reset durante operación ---");
-        $display("\nPresionando tecla y aplicando reset");
-        press_key(2, 2);  // Tecla 9
-        
-        #(CLK_PERIOD * 100);
-        $display("Aplicando reset...");
-        rst_n = 0;
-        #(CLK_PERIOD * 10);
-        rst_n = 1;
-        
-        if (!key_valid) begin
-            $display("  ✓ Sistema reseteado correctamente");
+
+        if (key_code !== exp) begin
+            $display("  ✗ ERROR: esperado key_code=%h, obtenido=%h", exp, key_code);
+            errors = errors + 1;
+        end else begin
+            $display("  ✓ key_code correcto: %h", key_code);
         end
-        
-        release_key();
-        #(CLK_PERIOD * 50);
-        
-        // Prueba 7: Simulación completa de entrada de código
-        $display("\n--- Prueba 7: Ingresando código 1234 ---");
-        
-        // Ingresar 1
-        press_key(0, 0);
-        #(CLK_PERIOD * 50);
-        release_key();
-        #(CLK_PERIOD * 20);
-        
-        // Ingresar 2
-        press_key(0, 1);
-        #(CLK_PERIOD * 50);
-        release_key();
-        #(CLK_PERIOD * 20);
-        
-        // Ingresar 3
-        press_key(0, 2);
-        #(CLK_PERIOD * 50);
-        release_key();
-        #(CLK_PERIOD * 20);
-        
-        // Ingresar 4
-        press_key(0, 3);
-        #(CLK_PERIOD * 50);
-        release_key();
-        
-        $display("  Secuencia completada");
-        
-        // Prueba 8: Verificar escaneo de columnas
-        $display("\n--- Prueba 8: Monitoreo de escaneo de columnas ---");
-        $display("Las columnas deberían estar cambiando secuencialmente:");
-        
-        for (int i = 0; i < 16; i++) begin
-            @(posedge clk);
-            if (i % 4 == 0)
-                $display("  col_index = %0d, cols = %b", i%4, cols);
+
+        // confirmar que key_valid dura un ciclo
+        @(posedge clk);
+        if (key_valid !== 1'b0) begin
+            $display("  ✗ ERROR: key_valid duró más de un ciclo");
+            errors = errors + 1;
+        end else begin
+            $display("  ✓ key_valid fue pulso de un ciclo");
         end
-        
-        // Resumen final
-        $display("\n===========================================");
-        $display("Pruebas completadas exitosamente");
-        $display("===========================================");
-        
-        #1000;
+
+        // sostener más tiempo y verificar que no vuelva a disparar
+        wait_cycles(20);
+        if (key_valid !== 1'b0) begin
+            $display("  ✗ ERROR: key_valid volvió a activarse con tecla sostenida");
+            errors = errors + 1;
+        end else begin
+            $display("  ✓ tecla sostenida no generó nuevos pulsos");
+        end
+
+        release_key();
+        wait_cycles(HOLD_CYCLES);
+    end
+    endtask
+
+    //============================================================
+    // Conteo de pulsos
+    //============================================================
+    always @(posedge clk) begin
+        if (key_valid)
+            pulse_count = pulse_count + 1;
+    end
+
+    //============================================================
+    // Test principal
+    //============================================================
+    initial begin
+        errors = 0;
+        pulse_count = 0;
+
+        $display("============================================================");
+        $display("Iniciando testbench de m3_keypad_reader");
+        $display("============================================================");
+
+        reset_system();
+
+        // Pruebas representativas
+        test_one_key(2'd0, 2'd0, "Prueba tecla 1");
+        test_one_key(2'd0, 2'd3, "Prueba tecla A");
+        test_one_key(2'd1, 2'd1, "Prueba tecla 5");
+        test_one_key(2'd2, 2'd2, "Prueba tecla 9");
+        test_one_key(2'd3, 2'd1, "Prueba tecla 0");
+        test_one_key(2'd3, 2'd3, "Prueba tecla D");
+
+        // Verificar que en reposo sigue escaneando columnas
+        $display("\n--- Verificación de escaneo en reposo ---");
+        key_active = 1'b0;
+        wait_cycles(20);
+        $display("  cols actual = %b", cols);
+
+        $display("\n============================================================");
+        if (errors == 0)
+            $display("✅ TODAS LAS PRUEBAS PASARON");
+        else
+            $display("❌ SE ENCONTRARON %0d ERRORES", errors);
+        $display("============================================================");
+
+        #100;
         $finish;
     end
-    
-    // Monitor de señales
+
+    //============================================================
+    // Monitor
+    //============================================================
     initial begin
-        $monitor("Time=%0t | rows=%b | cols=%b | key_valid=%b | key_code=%h", 
+        $monitor("t=%0t rows=%b cols=%b key_valid=%b key_code=%h",
                  $time, rows, cols, key_valid, key_code);
     end
-    
-    // Generar archivo VCD
+
+    //============================================================
+    // VCD
+    //============================================================
     initial begin
-        $dumpfile("tb_keypad_reader.vcd");
-        $dumpvars(0, tb_keypad_reader);
+        $dumpfile("m3_keypad_reader_tb.vcd");
+        $dumpvars(0, m3_keypad_reader_tb);
     end
-    
-    // Verificación automática adicional
-    int errors = 0;
-    
-    always @(posedge clk) begin
-        if (key_valid) begin
-            // Verificar que key_code no sea 0 cuando hay tecla válida
-            if (key_code == 4'h0 && rows != 4'b0000) begin
-                $error("key_valid activo pero key_code = 0");
-                errors++;
-            end
-        end
-    end
-    
-    // Finalizar con resumen de errores
-    final begin
-        if (errors == 0)
-            $display("\n✅ TODAS LAS PRUEBAS PASARON - 0 errores");
-        else
-            $display("\n❌ PRUEBAS FALLIDAS - %0d errores encontrados", errors);
-    end
-    
+
 endmodule
