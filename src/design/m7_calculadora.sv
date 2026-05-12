@@ -9,7 +9,7 @@ module m7_calculadora (
     output logic        m4_load,         
     output logic [15:0] m4_result_data   
 );
-
+    // Registros para almacenar los operandos A y B
     logic [10:0] reg_A, reg_B;
     logic [2:0]  state; 
     
@@ -17,10 +17,14 @@ module m7_calculadora (
     logic [3:0]  b3, b2, b1, b0;
 
     logic [10:0] val_en_pantalla;
+
+    // Convertir el valor mostrado en la pantalla a un número binario para cálculos.
     assign val_en_pantalla = ((current_display[7:4]   < 10) ? {7'd0, current_display[7:4]}   : 11'd0) * 11'd100 + 
                              ((current_display[11:8]  < 10) ? {7'd0, current_display[11:8]}  : 11'd0) * 11'd10  + 
                              ((current_display[15:12] < 10) ? {7'd0, current_display[15:12]} : 11'd0);
 
+
+    // Lógica principal de la calculadora
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             reg_A <= 0;
@@ -57,14 +61,16 @@ module m7_calculadora (
                     end
                 end
 
+                // Estado de cálculo: Realiza la suma de A y B
+
                 3'd1: begin
                     suma <= reg_A + reg_B;
                     state <= 3'd2;
                 end
 
-                // ==========================================
-                // LÓGICA CORREGIDA (Esquivando el Bug del Compilador)
-                // ==========================================
+                
+                //  Estado de conversión: Convierte la suma (en binario) a formato BCD para mostrar en la pantalla.
+
                 3'd2: begin
                     if (suma > 12'd999) begin // Equivalente a >= 1000
                         b3 <= 4'd1; temp_val <= suma - 12'd1000;
@@ -73,6 +79,8 @@ module m7_calculadora (
                     end
                     state <= 3'd3;
                 end
+
+                // Estado de extracción de dígitos: Extrae los dígitos BCD uno por uno para formar el resultado final.
 
                 3'd3: begin
                     if      (temp_val > 12'd899) begin b2 <= 4'd9; temp_val <= temp_val - 12'd900; end
@@ -87,6 +95,8 @@ module m7_calculadora (
                     else                         begin b2 <= 4'd0; end
                     state <= 3'd4;
                 end
+
+                // Estado final: Asigna los dígitos BCD a la salida para mostrar el resultado en la pantalla.
 
                 3'd4: begin
                     if      (temp_val > 12'd89)  begin b1 <= 4'd9; b0 <= temp_val - 12'd90; end

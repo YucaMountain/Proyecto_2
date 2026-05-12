@@ -31,8 +31,7 @@ module m5_number_capture (
                     done <= 1'b1; // Emite pulso de confirmación
                 end
                 
-                // Nota: Si quieres que la tecla 'A' borre la pantalla, 
-                // puedes agregar un 'else if (key_code == 4'hA)' aquí.
+                // Si ya se han ingresado 3 dígitos, ignora entradas adicionales
             end
         end
     end

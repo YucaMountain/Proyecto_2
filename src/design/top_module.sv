@@ -7,9 +7,8 @@ module top_module (
     output logic [3:0] an   // Display: Ánodos/Transistores
 );
 
-    // ==========================================
     // CABLES INTERNOS (Señales de interconexión)
-    // ==========================================
+    
     logic clk_1khz;
     logic [3:0] key_code_wire;
     logic key_valid_wire;
@@ -22,18 +21,16 @@ module top_module (
     logic        m7_to_m4_load;  // Señal de cargar resultado
     logic [15:0] m7_to_m4_data;  // El número del resultado de la suma
 
-    // ==========================================
+    
     // 1. DIVISOR DE RELOJ
-    // ==========================================
     m1_clk_divider u_clk_div (
         .clk_in  (clk),
         .rst_n   (rst_n),
         .clk_out (clk_1khz)
     );
 
-    // ==========================================
+    
     // 2. LECTOR DE TECLADO
-    // ==========================================
     m3_keypad_reader u_keypad (
         .clk       (clk_1khz),
         .rst_n     (rst_n),
@@ -43,9 +40,8 @@ module top_module (
         .key_valid (key_valid_wire)
     );
 
-    // ==========================================
-    // 3. CONTROLADOR DE PANTALLA (El Pizarrón)
-    // ==========================================
+    
+    // 3. CONTROLADOR DE PANTALLA
     m4_display_controller u_controller (
         .clk          (clk_1khz),
         .rst_n        (rst_n),
@@ -61,9 +57,8 @@ module top_module (
         .display_data (display_data_wire)
     );
 
-    // ==========================================
+    
     // 4. CALCULADORA (El Cerebro)
-    // ==========================================
     m7_calculadora u_calculadora (
         .clk             (clk_1khz),
         .rst_n           (rst_n),
@@ -79,9 +74,7 @@ module top_module (
         .m4_result_data  (m7_to_m4_data)
     );
 
-    // ==========================================
-    // 5. DRIVER FÍSICO DEL DISPLAY
-    // ==========================================
+    // 5. DRIVER FÍSICO DEL DISPLAY (Muestra lo que le diga el controlador)
     m6_seven_segment_driver u_display (
         .clk      (clk_1khz),
         .rst_n    (rst_n),

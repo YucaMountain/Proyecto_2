@@ -1,5 +1,5 @@
 module m3_keypad_reader (
-    input  logic clk,       // Conectar al clk_1khz generado por clk_divider
+    input  logic clk,       // Conectar al clk_1khz generado por m1_ClockDivider
     input  logic rst_n,
     input  logic [3:0] rows,
     output logic [3:0] cols,
@@ -7,7 +7,7 @@ module m3_keypad_reader (
     output logic       key_valid
 );
 
-    // Si el reloj es de 1kHz, 5 ciclos = 5ms de tiempo de escaneo por columna
+    // Si el reloj es de 1kHz, 5 ciclos = 5ms de tiempo de escaneo por columna, ideal para un teclado numpad
     localparam SCAN_DELAY = 16'd5;  
     
     // Señales internas
@@ -20,17 +20,16 @@ module m3_keypad_reader (
     logic [3:0] key_code_comb;
     logic scan_enable;
     
-    //========================================
-    // 1. Debounce en filas
-    //========================================
+    
+    // Debounce en filas gracias al módulo m2_DeBounce
+    
     m2_DeBounce db0 (.clk(clk), .rst_n(rst_n), .sw_in(rows[0]), .sw_out(rows_db[0]));
     m2_DeBounce db1 (.clk(clk), .rst_n(rst_n), .sw_in(rows[1]), .sw_out(rows_db[1]));
     m2_DeBounce db2 (.clk(clk), .rst_n(rst_n), .sw_in(rows[2]), .sw_out(rows_db[2]));
     m2_DeBounce db3 (.clk(clk), .rst_n(rst_n), .sw_in(rows[3]), .sw_out(rows_db[3]));
 
-    //========================================
-    // 2. Escaneo de columnas 
-    //========================================
+    
+    // Escaneo de columnas 
     // Pausa el escáner si detecta cualquier fila en '0' (presión física detectada)
     // Esto da tiempo para que los debouncers hagan su trabajo sin cambiar de columna
     assign scan_enable = (rows == 4'b1111); 
@@ -50,21 +49,22 @@ module m3_keypad_reader (
     end
 
     // Rotar el '0' por las columnas
+
     always_comb begin
         cols = 4'b1111;
         cols[col_index] = 1'b0;
     end
 
-    //========================================
-    // 3. Detección de tecla presionada (Lógica Positiva)
-    //========================================
+    
+    // Detección de tecla presionada (Lógica Positiva)
     // Invertimos el debouncer: Ahora si un botón se presiona, su bit será '1'
+
     assign rows_inv = ~rows_db; 
     assign key_pressed = (rows_inv != 4'b0000);
 
-    //========================================
-    // 4. Codificación combinacional
-    //========================================
+    
+    // Codificación combinacional
+
     always_comb begin
         key_code_comb = 4'h0; // Valor por defecto
         
@@ -97,9 +97,9 @@ module m3_keypad_reader (
         endcase
     end
 
-    //========================================
-    // 5. Generar pulso de key_valid y registrar código
-    //========================================
+    
+    // Generar pulso de key_valid y registrar código
+    
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             key_pressed_prev <= 0;
