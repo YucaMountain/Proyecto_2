@@ -97,14 +97,14 @@ hex       │  │(filtro)    │   │_reader     │   │   (FSM control)   �
          │                         │                   └────────┼─────────┘
          │                         │                            │
          │                         │                   ┌────────▼────────┐
-         │                         └───────────────────▶│ m6_seven_seg_   │
+         │                         └──────────────────▶│ m6_seven_seg_  │
          │                                             │ driver          │
          │                                             └────────┬────────┘
          │                                                      │
          └──────────────────────────────────────────────────────┼───────┘
                                                                 ▼
                                                           displays 7 seg
-                                                          
+ ```                                               
 **Nota:** Las señales de control desde `m7_calculadora` hacia `m4_display_controller` y `m5_number_capture` no se muestran en detalle para mantener la claridad, pero incluyen órdenes de captura, limpieza y carga de resultado.
 
 ### 5.2 Módulos finales implementados
