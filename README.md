@@ -172,11 +172,26 @@ Las simulaciones permitieron verificar el comportamiento funcional esperado y ad
 
 ## 8. Análisis de consumo de recursos en la FPGA
 
-Recurso Lógico / Físico,Utilizado,Total Disponible,Utilización (%)
-LUTs (Look-Up Tables),680,"8,640",7.87 %
-Registros (Flip-Flops),171,"8,640",1.98 %
-Bloques I/O (Pines físicos),21,~ 274,7.66 %
-Recursos de Reloj (Buffers/Red),1,16,6.25 %
+Una vez finalizado el diseño a nivel de transferencia de registros (RTL), el código fue sintetizado e implementado utilizando el entorno de desarrollo **Yosys** para la tarjeta **Tang Nano 9K** (chip Gowin GW1NR-9). 
+
+El objetivo de esta fase es cuantificar la "huella de hardware" que el diseño ocupa físicamente dentro de la matriz de silicio. A continuación, se presenta la tabla resumen de utilización de recursos obtenida a partir del reporte estadístico de síntesis proporcionado por la herramienta:
+
+| Recurso Lógico / Físico | Utilizado | Total Disponible | Utilización (%) |
+| :--- | :---: | :---: | :---: |
+| LUTs (*Look-Up Tables*) | 680 | 8,640 | 7.87 % |
+| Registros (Flip-Flops) | 171 | 8,640 | 1.98 % |
+| Bloques I/O (Pines físicos) | 21 | 274 | 7.66 % |
+| Recursos de Reloj (Buffers/Red) | 1 | 16 | 6.25 % |
+
+**Potencia Dinámica Estimada:** No reportada por la herramienta (N/A).
+
+---
+
+### Análisis de los resultados
+
+* **Eficiencia Combinacional:** El consumo de LUTs se mantiene en un porcentaje notablemente bajo (7.87%). Esto demuestra que la implementación de las barreras lógicas explícitas (para evitar colisiones entre datos y comandos) y la decodificación del display de 7 segmentos fueron resueltas por el sintetizador mediante mapas de Karnaugh altamente optimizados, minimizando el uso de compuertas lógicas físicas.
+* **Eficiencia Secuencial:** La cantidad de Flip-Flops utilizados (1.98%) corresponde estrictamente a la suma de los registros internos de la calculadora (`reg_A`, `reg_B`), los contadores de los divisores de reloj, los registros de sincronización de entrada y los bits de estado de la FSM. La ausencia de *latches* inferidos confirma la correcta aplicación de las buenas prácticas de diseño síncrono mediante `always_ff`.
+* **Gestión de I/O:** El uso de pines está restringido estrictamente a 21 terminales (6 buffers de entrada y 15 de salida), lo que representa una utilización del 7.66%. Esto deja más del 92% de los recursos de entrada/salida de la placa libres para futuras expansiones del proyecto o integración de periféricos adicionales.
 
 
 
