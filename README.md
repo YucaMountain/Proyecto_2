@@ -248,8 +248,17 @@ El proyecto permitió implementar satisfactoriamente un sistema digital sincrón
 
 ## 13. Bonus 2:  Construcción de un cerrojo Set-Reset con compuertas NAND
 
+El inciso 6.2 consiste básicamente de contruir un Latch SR por medio de compuertas NAND, y que estas sean visibles tanto en luces LED del cirucito como en el osciloscopio.
+
+A continuación se muestra una foto de la tabla de verdad de un SR latch:
+
 <img width="1280" height="720" alt="image" src="https://github.com/user-attachments/assets/7752456f-dac7-4f2d-93d6-58a1dda50ad4" />
 
+Donde los imputs Set Y Reset vienen de DIP switches implementados, estos pasan por la lógica del circuito latch SR generando junto con la señal del reloj, una salida Q y Q negada dependiendo del valor. 
+
+El siguiente video muestra las salidas cambiando dependiendo de las entradas Set Y Reset, también se muestran las mediciones en el osciloscopio de los datos del Clock, el Q y el Q negado. Tambien cabe recalcar que la señal de salida no cambiará si el clock se desactiva.
+
+https://youtu.be/2NYlWUwxWmA
 
 ## 12. Referencias
 
