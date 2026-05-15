@@ -242,6 +242,15 @@ Durante el desarrollo del proyecto se identificaron varios problemas relevantes:
 
 El proyecto permitió implementar satisfactoriamente un sistema digital sincrónico completo sobre la FPGA Tang Nano 9K, integrando captura de datos desde un teclado hexadecimal, almacenamiento de operandos, control secuencial, suma aritmética y despliegue en cuatro dispositivos de 7 segmentos. Además de cumplir la funcionalidad principal, el desarrollo permitió reforzar conceptos fundamentales de diseño modular, sincronización de señales externas, eliminación de rebotes, diseño de FSM y verificación mediante simulación. El sistema final logró operar correctamente tanto en simulación como en implementación física, incluyendo casos límite como la suma de `999 + 999 = 1998`.
 
+## 12. Bonus 1: Contadores sincrónicos
+
+
+
+## 13. Bonus 2:  Construcción de un cerrojo Set-Reset con compuertas NAND
+
+<img width="1280" height="720" alt="image" src="https://github.com/user-attachments/assets/7752456f-dac7-4f2d-93d6-58a1dda50ad4" />
+
+
 ## 12. Referencias
 
 - Pong P. Chu, *FPGA Prototyping by SystemVerilog Examples*.
