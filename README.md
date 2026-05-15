@@ -245,7 +245,7 @@ A continuación un video donde muestra el funcionamiento del circuito y el códi
 
 https://youtu.be/Xo2Z6MN6MfE
 
-
+*Faltan aun las fotos*
 
 ## 12. Conclusión
 
