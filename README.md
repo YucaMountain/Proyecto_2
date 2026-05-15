@@ -238,15 +238,24 @@ Durante el desarrollo del proyecto se identificaron varios problemas relevantes:
 - **Integración del sistema completo**  
   Aunque varios módulos funcionaban correctamente por separado, fue necesario validar la correcta interconexión entre ellos para obtener un comportamiento funcional coherente en la implementación final.
 
-## 11. Conclusión
+
+## 11. Fotos Y Videos del Proyecto
+
+A continuación un video donde muestra el funcionamiento del circuito y el código de fpga, a su vez como cambian los datos del osciloscopio cuando se presiona una nueva tecla. Las fotos muestran resultados individuales de números presionados en especial.
+
+https://youtu.be/Xo2Z6MN6MfE
+
+
+
+## 12. Conclusión
 
 El proyecto permitió implementar satisfactoriamente un sistema digital sincrónico completo sobre la FPGA Tang Nano 9K, integrando captura de datos desde un teclado hexadecimal, almacenamiento de operandos, control secuencial, suma aritmética y despliegue en cuatro dispositivos de 7 segmentos. Además de cumplir la funcionalidad principal, el desarrollo permitió reforzar conceptos fundamentales de diseño modular, sincronización de señales externas, eliminación de rebotes, diseño de FSM y verificación mediante simulación. El sistema final logró operar correctamente tanto en simulación como en implementación física, incluyendo casos límite como la suma de `999 + 999 = 1998`.
 
-## 12. Bonus 1: Contadores sincrónicos
+## 13. Bonus 1: Contadores sincrónicos
 
 
 
-## 13. Bonus 2:  Construcción de un cerrojo Set-Reset con compuertas NAND
+## 14. Bonus 2:  Construcción de un cerrojo Set-Reset con compuertas NAND
 
 El inciso 6.2 consiste básicamente de contruir un Latch SR por medio de compuertas NAND, y que estas sean visibles tanto en luces LED del cirucito como en el osciloscopio.
 
