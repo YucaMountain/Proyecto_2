@@ -172,15 +172,13 @@ Las simulaciones permitieron verificar el comportamiento funcional esperado y ad
 
 ## 8. Análisis de consumo de recursos en la FPGA
 
-**Pendiente de completar con datos del reporte de síntesis/place and route.**
+Recurso Lógico / Físico,Utilizado,Total Disponible,Utilización (%)
+LUTs (Look-Up Tables),680,"8,640",7.87 %
+Registros (Flip-Flops),171,"8,640",1.98 %
+Bloques I/O (Pines físicos),21,~ 274,7.66 %
+Recursos de Reloj (Buffers/Red),1,16,6.25 %
 
-En esta sección deben colocarse los recursos consumidos por el diseño final en la Tang Nano 9K, por ejemplo:
 
-- LUTs utilizadas
-- Flip-Flops utilizados
-- Bloques de I/O
-- Buffers o recursos de reloj
-- Potencia estimada
 
 > *Nota: Una vez ejecutada la síntesis con GOWIN o Yosys, se debe llenar esta tabla con los valores obtenidos.*
 
