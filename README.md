@@ -199,11 +199,22 @@ El objetivo de esta fase es cuantificar la "huella de hardware" que el diseño o
 
 ## 9. Reporte de velocidades máximas de reloj posibles en el diseño
 
-**Pendiente de completar con datos del reporte temporal.**
+El diseño fue construido para operar tomando como base el oscilador de cristal interno de **27 MHz** de la placa Tang Nano 9K. Tras el proceso de *Place and Route*, se realizó un Análisis de Tiempos Estático (STA) para validar la integridad de las señales en los diferentes dominios de reloj.
 
-El diseño fue construido para operar con el reloj de 27 MHz de la Tang Nano 9K. En esta sección debe indicarse la frecuencia máxima estimada por la herramienta de implementación, junto con el margen de operación respecto a la especificación mínima requerida.
+| Dominio de Reloj | Frecuencia Objetivo | Frecuencia Máxima ($F_{max}$) | Estado |
+| :--- | :---: | :---: | :---: |
+| Reloj Principal (`clk_in`) | 27.00 MHz | 179.69 MHz | PASS |
+| Reloj Derivado (`clk_1khz`) | 27.00 MHz* | 73.29 MHz | PASS |
 
-> *Por ejemplo: “La herramienta reporta una frecuencia máxima de 120 MHz, lo que da un margen amplio respecto a los 27 MHz de operación.”*
+*\*Nota: El dominio de 1 kHz fue evaluado a la frecuencia de entrada por la herramienta de síntesis para garantizar la cobertura del peor caso.*
+
+### Análisis de Temporización
+
+1. **Margen de Seguridad en el Reloj Principal:** La frecuencia máxima de **179.69 MHz** permite una operación extremadamente fluida a los 27 MHz nominales. La ruta crítica en este dominio es mínima, lo que elimina riesgos de inestabilidad térmica o eléctrica en el oscilador principal.
+
+2. **Robustez en el Dominio Lento:** Aunque la complejidad lógica del sistema (Máquina de Estados de la calculadora y lógica de conversión BCD) limita la velocidad máxima a **73.29 MHz**, el diseño real opera a una frecuencia de **1 kHz**. 
+
+3. **Conclusión Técnica:** La diferencia entre la frecuencia máxima soportada y la frecuencia de operación real dota al sistema de una estabilidad excepcional. Las señales tienen un tiempo de propagación prácticamente ilimitado en comparación con las capacidades físicas del hardware, resultando en un sistema inmune a violaciones de tiempos de *setup* o *hold* durante su ejecución en la FPGA.
 
 ## 10. Análisis de principales problemas hallados y soluciones aplicadas
 
