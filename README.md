@@ -248,22 +248,38 @@ https://youtu.be/Xo2Z6MN6MfE
 Prueba 1: señales del teclado
 <img width="800" height="503" alt="prueba_1" src="https://github.com/user-attachments/assets/f8eabd8e-9b3c-474c-a2f2-e43c849de17d" />
 
+Gráfico Prueba 1:
+<img width="1096" height="1453" alt="OnlineChartMaker com" src="https://github.com/user-attachments/assets/4415fa2b-4329-4351-ac01-7afb4c26717f" />
+
 Prueba 2: señales del 7 seg (sin excitación)
 <img width="800" height="503" alt="prueba_2" src="https://github.com/user-attachments/assets/55ef4d11-efc1-47f9-910a-865f667b2038" />
+
+Gráfico Prueba 2:
+<img width="1096" height="1453" alt="OnlineChartMaker com (1)" src="https://github.com/user-attachments/assets/702c6c38-dab7-43c7-a475-ce989a82f8eb" />
 
 Prueba 3a: señales del 7 seg (primer dígito 0)
 <img width="800" height="503" alt="prueba_3a" src="https://github.com/user-attachments/assets/0574c2e7-ebeb-4746-b216-6484c013e882" />
 
+Gráfico Prueba 3a:
+<img width="1096" height="1453" alt="OnlineChartMaker com (2)" src="https://github.com/user-attachments/assets/b948a122-d525-411a-9c33-4e171313c998" />
 
 Prueba 3b: señales del 7 seg (segundo dígito 6)
 <img width="800" height="503" alt="prueba_3b" src="https://github.com/user-attachments/assets/5c7af373-45db-4e3f-bcbb-b60c3178a430" />
 
+Gráfico Prueba 3b:
+<img width="1096" height="1453" alt="OnlineChartMaker com (3)" src="https://github.com/user-attachments/assets/b0325857-c662-497f-9542-21f535fe7586" />
+
 Prueba 3c: señales del 7 seg (tercer dígito 7)
 <img width="800" height="503" alt="prueba_3c" src="https://github.com/user-attachments/assets/1be0e052-196d-43cc-8bad-cb27a1b3bc09" />
 
+Gráfico Prueba 3c:
+<img width="1096" height="1453" alt="OnlineChartMaker com (4)" src="https://github.com/user-attachments/assets/f633a0ec-f74c-4775-9deb-9352ad615361" />
 
 Prueba 3d: señales del 7 seg (suma del mismo número dos veces 67+67)
 <img width="800" height="503" alt="prueba_3d" src="https://github.com/user-attachments/assets/82b34802-c387-4c56-95e8-cce6d5481c72" />
+
+Gráfico Prueba 3d:
+<img width="1096" height="1453" alt="OnlineChartMaker com (5)" src="https://github.com/user-attachments/assets/9d079026-4d21-4341-b5d1-4adf1451a3e4" />
 
 
 ## 12. Conclusión
