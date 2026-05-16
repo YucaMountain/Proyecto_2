@@ -382,6 +382,14 @@ En estos casos, varios flip-flops cambian de estado en el mismo flanco de reloj.
 
 En un contador síncrono bien diseñado estas fallas suelen ser muy cortas y normalmente no afectan el conteo cuando la señal se usa correctamente con el mismo reloj. Sin embargo, sí pueden observarse con instrumentos adecuados y son importantes cuando RCO se utiliza como señal combinacional para otros circuitos sensibles a pulsos breves.
 
+### Fotos de prueba
+
+A continuación, las fotos del osciloscopio midiendo las luces leds y el RC0
+
+<img width="800" height="503" alt="scope_6_1leds" src="https://github.com/user-attachments/assets/812c633e-9441-46d9-b7a0-126237a48ece" />
+<img width="800" height="503" alt="scope_6_1rc0" src="https://github.com/user-attachments/assets/108327ae-cd86-4645-b1a1-a005a815ca08" />
+
+
 
 ## 14. Bonus 2:  Construcción de un cerrojo Set-Reset con compuertas NAND
 
