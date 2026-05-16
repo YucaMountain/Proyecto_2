@@ -265,8 +265,6 @@ Prueba 3c: señales del 7 seg (tercer dígito 7)
 Prueba 3d: señales del 7 seg (suma del mismo número dos veces 67+67)
 <img width="800" height="503" alt="prueba_3d" src="https://github.com/user-attachments/assets/82b34802-c387-4c56-95e8-cce6d5481c72" />
 
-Prueba 4: señal del 7 seg con 4 dígitos
-
 
 ## 12. Conclusión
 
