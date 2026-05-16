@@ -245,7 +245,28 @@ A continuación un video donde muestra el funcionamiento del circuito y el códi
 
 https://youtu.be/Xo2Z6MN6MfE
 
-*Faltan aun las fotos*
+Prueba 1: señales del teclado
+<img width="800" height="503" alt="prueba_1" src="https://github.com/user-attachments/assets/f8eabd8e-9b3c-474c-a2f2-e43c849de17d" />
+
+Prueba 2: señales del 7 seg (sin excitación)
+<img width="800" height="503" alt="prueba_2" src="https://github.com/user-attachments/assets/55ef4d11-efc1-47f9-910a-865f667b2038" />
+
+Prueba 3a: señales del 7 seg (primer dígito 0)
+<img width="800" height="503" alt="prueba_3a" src="https://github.com/user-attachments/assets/0574c2e7-ebeb-4746-b216-6484c013e882" />
+
+
+Prueba 3b: señales del 7 seg (segundo dígito 6)
+<img width="800" height="503" alt="prueba_3b" src="https://github.com/user-attachments/assets/5c7af373-45db-4e3f-bcbb-b60c3178a430" />
+
+Prueba 3c: señales del 7 seg (tercer dígito 7)
+<img width="800" height="503" alt="prueba_3c" src="https://github.com/user-attachments/assets/1be0e052-196d-43cc-8bad-cb27a1b3bc09" />
+
+
+Prueba 3d: señales del 7 seg (suma del mismo número dos veces 67+67)
+<img width="800" height="503" alt="prueba_3d" src="https://github.com/user-attachments/assets/82b34802-c387-4c56-95e8-cce6d5481c72" />
+
+Prueba 4: señal del 7 seg con 4 dígitos
+
 
 ## 12. Conclusión
 
