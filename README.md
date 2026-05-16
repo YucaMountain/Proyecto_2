@@ -251,13 +251,141 @@ https://youtu.be/Xo2Z6MN6MfE
 
 El proyecto permitió implementar satisfactoriamente un sistema digital sincrónico completo sobre la FPGA Tang Nano 9K, integrando captura de datos desde un teclado hexadecimal, almacenamiento de operandos, control secuencial, suma aritmética y despliegue en cuatro dispositivos de 7 segmentos. Además de cumplir la funcionalidad principal, el desarrollo permitió reforzar conceptos fundamentales de diseño modular, sincronización de señales externas, eliminación de rebotes, diseño de FSM y verificación mediante simulación. El sistema final logró operar correctamente tanto en simulación como en implementación física, incluyendo casos límite como la suma de `999 + 999 = 1998`.
 
-## 13. Bonus 1: Contadores sincrónicos
+## 13. Bonus 1: Contadores sincrónicos con 74LS163
 
+En esta sección se implementó un contador binario utilizando dos integrados 74LS163 conectados en cascada. Cada 74LS163 es un contador síncrono cargable de 4 bits, por lo que al conectar dos de ellos se obtiene un contador total de 8 bits.
+
+El reloj del circuito fue generado desde la FPGA Tang Nano 9K, aproximándose a la frecuencia solicitada de 1.8432 MHz. Esta señal de reloj se conectó al pin de reloj de ambos contadores, de forma que los dos integrados reciben el mismo flanco positivo de reloj.
+
+El primer contador corresponde a los bits menos significativos del conteo, mientras que el segundo contador corresponde a los bits más significativos. De esta forma, el sistema cuenta desde `0000 0000` hasta `1111 1111`, equivalente a contar de 0 a 255 en decimal.
+
+---
+
+### ¿Qué hace la salida RCO en un 74LS163?
+
+La salida **RCO** significa *Ripple Carry Output*, o salida de acarreo. En el 74LS163, esta salida se activa cuando el contador llega a su valor máximo, es decir, cuando sus cuatro salidas están en alto:
+
+```
+QA = 1, QB = 1, QC = 1, QD = 1
+```
+
+Por lo tanto, cuando el contador está en `1111`, la salida RCO se pone en alto, siempre que la entrada de habilitación correspondiente también esté activa.
+
+La función principal de RCO es permitir conectar varios contadores en cascada. Es decir, sirve para indicarle al siguiente contador que el contador actual llegó a su valor máximo y que en el próximo pulso de reloj debe avanzar.
+
+---
+
+### ¿Por qué RCO y T están conectadas entre los dos contadores?
+
+Para formar un contador de más de 4 bits, se conecta la salida RCO del primer 74LS163 a la entrada T del segundo 74LS163.
+
+La conexión usada es:
+
+```
+RCO del primer contador → T del segundo contador
+```
+
+Ambos contadores reciben el mismo reloj. El primer contador, que representa los bits menos significativos, cuenta en cada flanco positivo de reloj. Cuando este contador llega a `1111`, su salida RCO se activa. Esa señal habilita al segundo contador mediante la entrada T. Entonces, en el siguiente flanco positivo de reloj, el segundo contador aumenta en una unidad.
+
+De esta forma, el segundo contador no avanza en cada pulso de reloj, sino solamente cuando el primer contador completa un ciclo de 16 estados. Por eso, el primer contador representa los bits bajos y el segundo representa los bits altos del conteo.
+
+El funcionamiento se puede resumir así:
+
+1. Primer 74LS163 cuenta `0000 → 1111`.
+2. Cuando llega a `1111`, activa RCO.
+3. RCO habilita el segundo 74LS163.
+4. El segundo contador aumenta en el siguiente flanco de reloj.
+
+Esto permite construir un contador síncrono de 8 bits usando dos contadores de 4 bits.
+
+---
+
+### Diferencia entre las entradas T y P del 74LS163
+
+En el 74LS163 existen dos entradas de habilitación para el conteo. En algunas hojas de datos se llaman:
+
+- **T** = ENT
+- **P** = ENP
+
+Ambas deben estar activas para que el contador pueda contar. Sin embargo, no cumplen exactamente la misma función.
+
+- La entrada **P** (ENP) habilita el conteo normal del contador. Si esta entrada está en bajo, el contador no avanza aunque llegue el reloj.
+- La entrada **T** (ENT) también habilita el conteo, pero además participa en la generación de la salida RCO. Por eso, para conectar contadores en cascada, la señal RCO del contador menos significativo se conecta a la entrada T del contador más significativo.
+
+En resumen:
+
+| Entrada | Función |
+|--------|---------|
+| P / ENP | Habilita el conteo |
+| T / ENT | Habilita el conteo **y** permite generar o propagar el acarreo RCO |
+
+Para que un 74LS163 cuente, normalmente se requiere:
+
+```
+P = 1
+T = 1
+```
+
+En la conexión en cascada, el primer contador tiene ambas entradas en alto para contar siempre. El segundo contador tiene P en alto, pero su entrada T depende del RCO del primer contador. Así, el segundo contador solo cuenta cuando el primero llega a `1111`.
+
+---
+
+## Tiempo de cambio luego del flanco positivo de reloj
+
+El 74LS163 es un contador síncrono, por lo que sus flip-flops cambian de estado después del flanco positivo del reloj. Sin embargo, el cambio no ocurre instantáneamente. Existe un pequeño retardo entre el flanco del reloj y el cambio observable en las salidas.
+
+Este retardo se llama **tiempo de propagación de reloj a salida**, usualmente indicado como `t_PLH` o `t_PHL`, dependiendo de si la salida cambia de bajo a alto o de alto a bajo.
+
+En la medición con osciloscopio, este tiempo se obtiene disparando el osciloscopio con el flanco positivo del reloj y observando cuánto tarda una salida (QA, QB, QC o QD) en cambiar de estado.
+
+Para un 74LS163, este tiempo suele estar en el orden de decenas de nanosegundos:
+
+```
+t_pd = tiempo entre el flanco positivo de CLK y el cambio de la salida medida
+t_pd ≈ [valor medido] ns
+```
+
+### ¿Importa cuál bit de salida se escoja?
+
+Para medir el retardo de propagación del contador, se puede usar cualquiera de las salidas QA, QB, QC o QD, siempre que esa salida cambie en el flanco de reloj observado.
+
+Sin embargo, sí importa desde el punto de vista práctico, porque no todos los bits cambian con la misma frecuencia:
+
+| Salida | Frecuencia de cambio |
+|--------|----------------------|
+| QA | Cada pulso de reloj |
+| QB | Cada 2 pulsos |
+| QC | Cada 4 pulsos |
+| QD | Cada 8 pulsos |
+
+Por esta razón, **QA** es más fácil de observar porque cambia más seguido. En cambio, QD o el MSB cambian con menor frecuencia, pero son útiles para disparar el osciloscopio cuando se quiere observar el comportamiento del contador completo o eventos asociados al acarreo.
+
+En teoría, todos los flip-flops internos del contador son síncronos y reciben el mismo reloj, por lo que sus salidas deberían cambiar aproximadamente al mismo tiempo. En la práctica, puede haber pequeñas diferencias debido a los retardos internos del circuito integrado.
+
+---
+
+### Observación de la salida RCO y posibles fallas o glitches
+
+La salida RCO se genera a partir de una combinación lógica de las salidas del contador. Como las salidas QA, QB, QC y QD no cambian exactamente al mismo tiempo después del flanco de reloj, pueden aparecer pequeños pulsos no deseados en la salida RCO. Estos pulsos breves se conocen como **glitches** o fallas transitorias.
+
+Estas fallas son difíciles de observar porque duran muy poco tiempo, normalmente en el orden de nanosegundos. Por eso se recomienda usar la opción de **captura de fallas** del osciloscopio o utilizar primero el modo de analizador lógico y luego el modo analógico.
+
+Es esperable encontrar estas fallas en transiciones donde varios bits del contador cambian simultáneamente. Por ejemplo:
+
+```
+0111 → 1000
+1011 → 1100
+1111 → 0000
+```
+
+En estos casos, varios flip-flops cambian de estado en el mismo flanco de reloj. Como cada salida puede tener un pequeño retardo distinto, durante un instante muy corto la lógica interna que genera RCO puede interpretar una combinación incorrecta y producir un pulso transitorio.
+
+En un contador síncrono bien diseñado estas fallas suelen ser muy cortas y normalmente no afectan el conteo cuando la señal se usa correctamente con el mismo reloj. Sin embargo, sí pueden observarse con instrumentos adecuados y son importantes cuando RCO se utiliza como señal combinacional para otros circuitos sensibles a pulsos breves.
 
 
 ## 14. Bonus 2:  Construcción de un cerrojo Set-Reset con compuertas NAND
 
-El inciso 6.2 consiste básicamente de contruir un Latch SR por medio de compuertas NAND, y que estas sean visibles tanto en luces LED del cirucito como en el osciloscopio.
+El inciso 6.2 consiste en contruir un Latch SR por medio de compuertas NAND, y que estas sean visibles tanto en luces LED del cirucito como en el osciloscopio.
 
 A continuación se muestra una foto de la tabla de verdad de un SR latch:
 
@@ -268,6 +396,27 @@ Donde los imputs Set Y Reset vienen de DIP switches implementados, estos pasan p
 El siguiente video muestra las salidas cambiando dependiendo de las entradas Set Y Reset, también se muestran las mediciones en el osciloscopio de los datos del Clock, el Q y el Q negado. Tambien cabe recalcar que la señal de salida no cambiará si el clock se desactiva.
 
 https://youtu.be/2NYlWUwxWmA
+
+### Explicación de funcionamiento
+
+El cerrojo SR es un circuito secuencial capaz de almacenar un bit de información. Tiene dos entradas principales: \(S\), que corresponde a **set**, y \(R\), que corresponde a **reset**. También tiene dos salidas: \(Q\) y \(\overline{Q}\), las cuales normalmente son complementarias.
+
+Cuando el reloj está en bajo, es decir, \(CLK = 0\), el circuito no responde a los cambios de \(S\) ni de \(R\). En este caso, el cerrojo mantiene el valor anterior en sus salidas. Por esta razón se dice que el cerrojo tiene memoria.
+
+Cuando el reloj está en alto, es decir, \(CLK = 1\), el circuito sí responde a las entradas:
+
+- Si \(S = 1\) y \(R = 0\), el cerrojo entra en estado **SET**, por lo que \(Q = 1\) y \(\overline{Q} = 0\).
+- Si \(S = 0\) y \(R = 1\), el cerrojo entra en estado **RESET**, por lo que \(Q = 0\) y \(\overline{Q} = 1\).
+- Si \(S = 0\) y \(R = 0\), el circuito mantiene el estado anterior.
+- Si \(S = 1\) y \(R = 1\), se presenta un estado no permitido, ya que se intenta activar set y reset al mismo tiempo. En este caso, las salidas pueden dejar de ser complementarias y el estado final no queda garantizado.
+
+Por esta razón, durante la operación normal se debe evitar que \(S\) y \(R\) estén en alto al mismo tiempo.
+
+### Utilidad del cerrojo SR
+
+El cerrojo SR puede utilizarse como una celda básica de memoria, ya que permite guardar un valor lógico mientras no se le indique cambiar. También puede emplearse como base para construir circuitos secuenciales más complejos, como registros, flip-flops, contadores o sistemas de control.
+
+Una aplicación práctica del cerrojo SR es almacenar el estado de una señal de control. Por ejemplo, puede utilizarse para recordar si un sistema fue activado o desactivado mediante dos botones: uno de **set** y otro de **reset**. En este circuito, el reloj permite controlar el momento en que el cerrojo acepta los cambios en las entradas.
 
 ## 12. Referencias
 
