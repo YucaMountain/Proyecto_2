@@ -245,16 +245,17 @@ A continuación un video donde muestra el funcionamiento del circuito y el códi
 
 https://youtu.be/Xo2Z6MN6MfE
 
--Prueba 1: señales del teclado
--Prueba 2: señales del 7 seg (sin excitación)
--Prueba 3a: señales del 7 seg (primer dígito 0)
--Prueba 3b: señales del 7 seg (segundo dígito 6)
--Prueba 3c: señales del 7 seg (tercer dígito 7)
--Prueba 3d: señales del 7 seg (suma del mismo número dos veces 67+67)
--Prueba 4: señal del 7 seg con 4 dígitos
+* Prueba 1: señales del teclado
+* Prueba 2: señales del 7 seg (sin excitación)
+* Prueba 3a: señales del 7 seg (primer dígito 0)
+* Prueba 3b: señales del 7 seg (segundo dígito 6)
+* Prueba 3c: señales del 7 seg (tercer dígito 7)
+* Prueba 3d: señales del 7 seg (suma del mismo número dos veces 67+67)
+* Prueba 4: señal del 7 seg con 4 dígitos
 
 
 Prueba 1: señales del teclado
+
 <img width="800" height="503" alt="prueba_1" src="https://github.com/user-attachments/assets/f8eabd8e-9b3c-474c-a2f2-e43c849de17d" />
 
 Gráfico Prueba 1:
